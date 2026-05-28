@@ -1,5 +1,6 @@
 package com.sameer.order_service.service;
 
+import com.sameer.order_service.kafka.OrderProducer;
 import com.sameer.order_service.entity.Order;
 import com.sameer.order_service.entity.OrderStatus;
 import com.sameer.order_service.repository.OrderRepository;
@@ -11,9 +12,12 @@ import java.time.LocalDateTime;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderProducer orderProducer;
+    public OrderService(OrderRepository orderRepository,
+                        OrderProducer orderProducer) {
 
-    public OrderService(OrderRepository orderRepository) {
         this.orderRepository = orderRepository;
+        this.orderProducer = orderProducer;
     }
 
     // CREATE ORDER
@@ -22,7 +26,11 @@ public class OrderService {
         order.setStatus(OrderStatus.CREATED);
         order.setCreatedAt(LocalDateTime.now());
 
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+
+        orderProducer.sendOrderEvent(
+                "Order Created with ID: " + savedOrder.getId());
+        return savedOrder;
     }
 
     // GET ORDER
