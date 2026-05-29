@@ -1,69 +1,204 @@
-# Event Driven Order Service
+# Event-Driven E-Commerce System
 
 ## Overview
 
-This project is an Event-Driven Order Management System built using Spring Boot, PostgreSQL, Apache Kafka, and Docker.
+A scalable event-driven e-commerce backend built using Spring Boot, Apache Kafka, PostgreSQL, Docker, and Microservices Architecture.
 
-When an order is created:
-
-1. Order is saved in PostgreSQL.
-2. Kafka Producer publishes an event.
-3. Kafka Consumer receives the event.
-4. Event is logged successfully.
-
----
-
-## Tech Stack
-
-- Java 21
-- Spring Boot
-- Spring Data JPA
-- PostgreSQL
-- Apache Kafka
-- Docker
-- Docker Compose
-- Swagger OpenAPI
+The project demonstrates how modern distributed systems communicate asynchronously using Kafka events while maintaining reliable data persistence with PostgreSQL.
 
 ---
 
 ## Features
 
-- Create Order
-- Get Order
-- Update Order
-- Delete Order
-- Kafka Producer
-- Kafka Consumer
-- Dockerized Deployment
-- Swagger API Documentation
+* Create, Update, Retrieve, and Delete Orders
+* Event-Driven Architecture using Apache Kafka
+* Kafka Producer and Consumer Integration
+* PostgreSQL Database Integration
+* Dockerized Infrastructure
+* Spring Data JPA & Hibernate
+* RESTful APIs with Swagger Documentation
+* Microservices-Based Design
+* Automatic Event Publishing on Order Operations
+
+---
+
+## Tech Stack
+
+| Technology      | Purpose                  |
+| --------------- | ------------------------ |
+| Java 17         | Programming Language     |
+| Spring Boot     | Backend Framework        |
+| Spring Data JPA | Database Access          |
+| PostgreSQL      | Relational Database      |
+| Apache Kafka    | Event Streaming Platform |
+| Docker          | Containerization         |
+| Maven           | Dependency Management    |
+| Swagger OpenAPI | API Documentation        |
 
 ---
 
 ## Architecture
 
+```text
 Client
-↓
-REST API
-↓
+   |
+   v
+Order REST API
+   |
+   v
+PostgreSQL Database
+
 Order Service
-↓
-PostgreSQL
-↓
+   |
+   v
 Kafka Producer
-↓
-order-topic
-↓
+   |
+   v
+Kafka Topic (order-topic)
+   |
+   v
 Kafka Consumer
+```
 
 ---
 
-## Run Project
+## Project Structure
 
-```bash
-docker compose up --build
+```text
+order-service
+│
+├── controller
+├── service
+├── repository
+├── entity
+├── kafka
+│   ├── OrderProducer
+│   └── OrderConsumer
+├── dto
+└── resources
 ```
 
-Swagger:
+---
+
+## API Endpoints
+
+### Create Order
+
+```http
+POST /api/orders
+```
+
+Request:
+
+```json
+{
+  "productName": "iPhone 16",
+  "quantity": 2,
+  "price": 85000
+}
+```
+
+---
+
+### Get Order
+
+```http
+GET /api/orders/{id}
+```
+
+---
+
+### Update Order
+
+```http
+PUT /api/orders/{id}
+```
+
+Request:
+
+```json
+{
+  "productName": "iPhone 16 Pro Max",
+  "quantity": 3,
+  "price": 95000,
+  "status": "SHIPPED"
+}
+```
+
+---
+
+### Delete Order
+
+```http
+DELETE /api/orders/{id}
+```
+
+---
+
+## Kafka Event Flow
+
+### Order Creation
+
+```text
+Order Created
+     |
+     v
+Kafka Producer
+     |
+     v
+order-topic
+     |
+     v
+Kafka Consumer
+```
+
+### Order Update
+
+```text
+Order Updated
+     |
+     v
+Kafka Producer
+     |
+     v
+order-topic
+     |
+     v
+Kafka Consumer
+```
+
+### Order Deletion
+
+```text
+Order Deleted
+     |
+     v
+Kafka Producer
+     |
+     v
+order-topic
+     |
+     v
+Kafka Consumer
+```
+
+---
+
+## Running the Project
+
+### Clone Repository
+
+```bash
+git clone https://github.com/Sameer07-web/event-driven-ecommerce-system.git
+```
+
+### Start Docker Services
+
+```bash
+docker-compose up --build
+```
+
+### Access Swagger UI
 
 ```text
 http://localhost:8080/swagger-ui/index.html
@@ -71,20 +206,35 @@ http://localhost:8080/swagger-ui/index.html
 
 ---
 
-## Sample Event Flow
+## Sample Kafka Logs
 
-Order Created
-↓
-Kafka Producer
-↓
-order-topic
-↓
-Kafka Consumer
-↓
-Event Received
+```text
+Order Event Sent: Order Created with ID: 41
+Received Order Event: Order Created with ID: 41
+```
+
+---
+
+## Future Enhancements
+
+* Global Exception Handling
+* DTO Validation
+* API Gateway
+* Inventory Service
+* Payment Service
+* Notification Service
+* Redis Caching
+* Centralized Logging
+* CI/CD Pipeline
 
 ---
 
 ## Author
 
 Mohammad Sameer
+
+GitHub:
+https://github.com/Sameer07-web
+
+LinkedIn:
+https://linkedin.com/in/mohammadsameer007
