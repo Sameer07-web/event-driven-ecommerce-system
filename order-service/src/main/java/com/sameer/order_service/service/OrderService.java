@@ -13,6 +13,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderProducer orderProducer;
+
     public OrderService(OrderRepository orderRepository,
                         OrderProducer orderProducer) {
 
@@ -30,6 +31,7 @@ public class OrderService {
 
         orderProducer.sendOrderEvent(
                 "Order Created with ID: " + savedOrder.getId());
+
         return savedOrder;
     }
 
@@ -53,7 +55,13 @@ public class OrderService {
             existingOrder.setStatus(updatedOrder.getStatus());
         }
 
-        return orderRepository.save(existingOrder);
+        Order savedOrder = orderRepository.save(existingOrder);
+
+        orderProducer.sendOrderEvent(
+                "Order Updated: ID=" + savedOrder.getId()
+                        + ", Status=" + savedOrder.getStatus());
+
+        return savedOrder;
     }
 
     // DELETE ORDER
@@ -62,5 +70,8 @@ public class OrderService {
         Order order = getOrderById(id);
 
         orderRepository.delete(order);
+
+        orderProducer.sendOrderEvent(
+                "Order Deleted with ID: " + id);
     }
 }
