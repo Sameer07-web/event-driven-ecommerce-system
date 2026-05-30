@@ -38,11 +38,16 @@ public class OrderController {
     // UPDATE ORDER
     @PutMapping("/{id}")
     public Order updateOrder(@PathVariable Long id,
-                             @RequestBody Order order) {
+                             @Valid @RequestBody OrderRequest request) {
+
+        Order order = Order.builder()
+                .productName(request.getProductName())
+                .quantity(request.getQuantity())
+                .price(request.getPrice())
+                .build();
 
         return orderService.updateOrder(id, order);
     }
-
     // DELETE ORDER
     @DeleteMapping("/{id}")
     public String deleteOrder(@PathVariable Long id) {

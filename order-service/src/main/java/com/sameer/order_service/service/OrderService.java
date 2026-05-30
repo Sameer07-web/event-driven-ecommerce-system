@@ -1,8 +1,10 @@
 package com.sameer.order_service.service;
 
-import com.sameer.order_service.kafka.OrderProducer;
+import com.sameer.order_service.dto.OrderEvent;
 import com.sameer.order_service.entity.Order;
 import com.sameer.order_service.entity.OrderStatus;
+import com.sameer.order_service.exception.OrderNotFoundException;
+import com.sameer.order_service.kafka.OrderProducer;
 import com.sameer.order_service.repository.OrderRepository;
 import org.springframework.stereotype.Service;
 
@@ -29,8 +31,15 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
-        orderProducer.sendOrderEvent(
-                "Order Created with ID: " + savedOrder.getId());
+        OrderEvent event = new OrderEvent(
+                savedOrder.getId(),
+                savedOrder.getProductName(),
+                savedOrder.getQuantity(),
+                savedOrder.getPrice(),
+                savedOrder.getStatus().name()
+        );
+
+        orderProducer.sendOrderEvent(event);
 
         return savedOrder;
     }
@@ -39,7 +48,9 @@ public class OrderService {
     public Order getOrderById(Long id) {
 
         return orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() ->
+                        new OrderNotFoundException(
+                                "Order not found with ID: " + id));
     }
 
     // UPDATE ORDER
@@ -57,9 +68,15 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(existingOrder);
 
-        orderProducer.sendOrderEvent(
-                "Order Updated: ID=" + savedOrder.getId()
-                        + ", Status=" + savedOrder.getStatus());
+        OrderEvent event = new OrderEvent(
+                savedOrder.getId(),
+                savedOrder.getProductName(),
+                savedOrder.getQuantity(),
+                savedOrder.getPrice(),
+                savedOrder.getStatus().name()
+        );
+
+        orderProducer.sendOrderEvent(event);
 
         return savedOrder;
     }
@@ -71,7 +88,14 @@ public class OrderService {
 
         orderRepository.delete(order);
 
-        orderProducer.sendOrderEvent(
-                "Order Deleted with ID: " + id);
+        OrderEvent event = new OrderEvent(
+                order.getId(),
+                order.getProductName(),
+                order.getQuantity(),
+                order.getPrice(),
+                "DELETED"
+        );
+
+        orderProducer.sendOrderEvent(event);
     }
 }

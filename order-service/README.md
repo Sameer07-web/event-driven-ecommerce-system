@@ -2,185 +2,138 @@
 
 ## Overview
 
-A scalable event-driven e-commerce backend built using Spring Boot, Apache Kafka, PostgreSQL, Docker, and Microservices Architecture.
+A production-style Event-Driven E-Commerce Backend built using Spring Boot, Apache Kafka, PostgreSQL, Docker, and Microservices principles.
 
-The project demonstrates how modern distributed systems communicate asynchronously using Kafka events while maintaining reliable data persistence with PostgreSQL.
+This project demonstrates asynchronous communication between services using Kafka Events while ensuring reliability through Retry Mechanisms, Dead Letter Queues (DLQ), Audit Logging, Health Monitoring, and Dockerized deployment.
 
 ---
 
 ## Features
 
-* Create, Update, Retrieve, and Delete Orders
-* Event-Driven Architecture using Apache Kafka
-* Kafka Producer and Consumer Integration
-* PostgreSQL Database Integration
+* Order Management (Create, Read, Update, Delete)
+* Apache Kafka Producer & Consumer
+* Event-Driven Architecture
+* PostgreSQL Integration
+* Audit Event Logging
+* Kafka Retry Mechanism
+* Dead Letter Queue (DLQ)
 * Dockerized Infrastructure
-* Spring Data JPA & Hibernate
-* RESTful APIs with Swagger Documentation
-* Microservices-Based Design
-* Automatic Event Publishing on Order Operations
+* Swagger API Documentation
+* Spring Boot Actuator Monitoring
+* Kafka UI Monitoring Dashboard
+
+---
+
+## Architecture Diagram
+
+![Architecture Diagram](screenshots/architecture-diagram.png)
 
 ---
 
 ## Tech Stack
 
-| Technology      | Purpose                  |
-| --------------- | ------------------------ |
-| Java 17         | Programming Language     |
-| Spring Boot     | Backend Framework        |
-| Spring Data JPA | Database Access          |
-| PostgreSQL      | Relational Database      |
-| Apache Kafka    | Event Streaming Platform |
-| Docker          | Containerization         |
-| Maven           | Dependency Management    |
-| Swagger OpenAPI | API Documentation        |
+| Technology      | Purpose              |
+| --------------- | -------------------- |
+| Java 21         | Programming Language |
+| Spring Boot 3   | Backend Framework    |
+| Spring Data JPA | Database Access      |
+| PostgreSQL      | Relational Database  |
+| Apache Kafka    | Event Streaming      |
+| Docker          | Containerization     |
+| Maven           | Build Tool           |
+| Swagger OpenAPI | API Documentation    |
+| Spring Actuator | Monitoring           |
 
 ---
 
-## Architecture
+## System Architecture
 
-```text
-Client
-   |
-   v
-Order REST API
-   |
-   v
-PostgreSQL Database
+User → Swagger UI → Order Service → PostgreSQL
 
-Order Service
-   |
-   v
-Kafka Producer
-   |
-   v
-Kafka Topic (order-topic)
-   |
-   v
-Kafka Consumer
-```
+Order Service → Kafka Producer → order-topic
+
+order-topic → Kafka Consumer → Audit Events Table
+
+Failed Events → Retry Topic → Dead Letter Queue (DLQ)
+
+Spring Actuator monitors application health and metrics.
 
 ---
 
-## Project Structure
+## Screenshots
 
-```text
-order-service
-│
-├── controller
-├── service
-├── repository
-├── entity
-├── kafka
-│   ├── OrderProducer
-│   └── OrderConsumer
-├── dto
-└── resources
-```
+### Swagger UI
 
----
+![Swagger UI](screenshots/swagger-ui.png)
 
-## API Endpoints
+### Kafka Topics
 
-### Create Order
+![Kafka Topics](screenshots/kafka-topics.png)
 
-```http
-POST /api/orders
-```
+### Kafka Message Flow
 
-Request:
+![Kafka Message Flow](screenshots/kafka-message-flow.png)
 
-```json
-{
-  "productName": "iPhone 16",
-  "quantity": 2,
-  "price": 85000
-}
-```
+### Dead Letter Queue (DLQ)
 
----
+![DLQ Event](screenshots/dlq-event-received.png)
 
-### Get Order
+### PostgreSQL Audit Logging
 
-```http
-GET /api/orders/{id}
-```
+![Audit Events](screenshots/postgres-audit-events.png)
 
----
+### Docker Containers Running
 
-### Update Order
+![Docker Containers](screenshots/docker-containers-running.png)
 
-```http
-PUT /api/orders/{id}
-```
+### Spring Actuator Health Check
 
-Request:
-
-```json
-{
-  "productName": "iPhone 16 Pro Max",
-  "quantity": 3,
-  "price": 95000,
-  "status": "SHIPPED"
-}
-```
-
----
-
-### Delete Order
-
-```http
-DELETE /api/orders/{id}
-```
+![Actuator Health](screenshots/actuator-health.png)
 
 ---
 
 ## Kafka Event Flow
 
-### Order Creation
+Order Created/Updated/Deleted
 
-```text
-Order Created
-     |
-     v
+↓
+
 Kafka Producer
-     |
-     v
+
+↓
+
 order-topic
-     |
-     v
+
+↓
+
 Kafka Consumer
-```
 
-### Order Update
+↓
 
-```text
-Order Updated
-     |
-     v
-Kafka Producer
-     |
-     v
+Audit Events Table
+
+If processing fails:
+
 order-topic
-     |
-     v
-Kafka Consumer
-```
 
-### Order Deletion
+↓
 
-```text
-Order Deleted
-     |
-     v
-Kafka Producer
-     |
-     v
-order-topic
-     |
-     v
-Kafka Consumer
-```
+order-topic-retry
+
+↓
+
+order-dlt
+
+---
+
+## API Endpoints
+
+| Method | Endpoint         | Description  |
+| ------ | ---------------- | ------------ |
+| POST   | /api/orders      | Create Order |
+| GET    | /api/orders/{id} | Get Order    |
+| PUT    | /api/orders/{id} | Update Order |
+| DELETE | /api/orders/{id} | Delete Order |
 
 ---
 
@@ -192,40 +145,52 @@ Kafka Consumer
 git clone https://github.com/Sameer07-web/event-driven-ecommerce-system.git
 ```
 
-### Start Docker Services
+### Build Project
 
 ```bash
-docker-compose up --build
+mvn clean package
 ```
 
-### Access Swagger UI
+### Run Docker Containers
+
+```bash
+docker compose up --build
+```
+
+---
+
+## Access Services
+
+Swagger UI
 
 ```text
 http://localhost:8080/swagger-ui/index.html
 ```
 
----
-
-## Sample Kafka Logs
+Kafka UI
 
 ```text
-Order Event Sent: Order Created with ID: 41
-Received Order Event: Order Created with ID: 41
+http://localhost:8081
+```
+
+Actuator Health
+
+```text
+http://localhost:8080/actuator/health
 ```
 
 ---
 
 ## Future Enhancements
 
-* Global Exception Handling
-* DTO Validation
-* API Gateway
 * Inventory Service
 * Payment Service
 * Notification Service
 * Redis Caching
-* Centralized Logging
+* Kubernetes Deployment
 * CI/CD Pipeline
+* API Gateway
+* Centralized Logging
 
 ---
 
@@ -233,8 +198,6 @@ Received Order Event: Order Created with ID: 41
 
 Mohammad Sameer
 
-GitHub:
-https://github.com/Sameer07-web
+GitHub: https://github.com/Sameer07-web
 
-LinkedIn:
-https://linkedin.com/in/mohammadsameer007
+LinkedIn: https://linkedin.com/in/mohammadsameer007
