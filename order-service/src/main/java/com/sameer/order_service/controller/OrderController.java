@@ -1,13 +1,16 @@
 package com.sameer.order_service.controller;
 
-import com.sameer.order_service.dto.OrderRequest;
-import com.sameer.order_service.entity.Order;
+import com.sameer.common.dto.ApiResponse;
+import com.sameer.order_service.dto.CreateOrderRequest;
+import com.sameer.order_service.dto.OrderResponse;
+import com.sameer.order_service.dto.UpdateOrderRequest;
 import com.sameer.order_service.service.OrderService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/orders")
+@RequestMapping("/api/v1/orders")
 public class OrderController {
 
     private final OrderService orderService;
@@ -16,44 +19,44 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    // CREATE ORDER
     @PostMapping
-    public Order createOrder(@Valid @RequestBody OrderRequest request) {
-
-        Order order = Order.builder()
-                .productName(request.getProductName())
-                .quantity(request.getQuantity())
-                .price(request.getPrice())
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<OrderResponse> createOrder(@Valid @RequestBody CreateOrderRequest request) {
+        OrderResponse response = orderService.createOrder(request);
+        return ApiResponse.<OrderResponse>builder()
+                .success(true)
+                .message("Order created successfully")
+                .data(response)
                 .build();
-
-        return orderService.createOrder(order);
     }
 
-    // GET ORDER BY ID
     @GetMapping("/{id}")
-    public Order getOrderById(@PathVariable Long id) {
-        return orderService.getOrderById(id);
-    }
-
-    // UPDATE ORDER
-    @PutMapping("/{id}")
-    public Order updateOrder(@PathVariable Long id,
-                             @Valid @RequestBody OrderRequest request) {
-
-        Order order = Order.builder()
-                .productName(request.getProductName())
-                .quantity(request.getQuantity())
-                .price(request.getPrice())
+    public ApiResponse<OrderResponse> getOrderById(@PathVariable Long id) {
+        OrderResponse response = orderService.getOrderById(id);
+        return ApiResponse.<OrderResponse>builder()
+                .success(true)
+                .message("Order fetched successfully")
+                .data(response)
                 .build();
-
-        return orderService.updateOrder(id, order);
     }
-    // DELETE ORDER
+
+    @PutMapping("/{id}")
+    public ApiResponse<OrderResponse> updateOrder(@PathVariable Long id,
+                                                  @Valid @RequestBody UpdateOrderRequest request) {
+        OrderResponse response = orderService.updateOrder(id, request);
+        return ApiResponse.<OrderResponse>builder()
+                .success(true)
+                .message("Order updated successfully")
+                .data(response)
+                .build();
+    }
+
     @DeleteMapping("/{id}")
-    public String deleteOrder(@PathVariable Long id) {
-
+    public ApiResponse<Void> deleteOrder(@PathVariable Long id) {
         orderService.deleteOrder(id);
-
-        return "Order deleted successfully";
+        return ApiResponse.<Void>builder()
+                .success(true)
+                .message("Order deleted successfully")
+                .build();
     }
-}
+}

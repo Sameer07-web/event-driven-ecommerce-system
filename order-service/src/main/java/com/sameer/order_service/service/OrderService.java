@@ -1,33 +1,39 @@
 package com.sameer.order_service.service;
 
+import com.sameer.order_service.dto.CreateOrderRequest;
 import com.sameer.order_service.dto.OrderEvent;
+import com.sameer.order_service.dto.OrderResponse;
+import com.sameer.order_service.dto.UpdateOrderRequest;
 import com.sameer.order_service.entity.Order;
 import com.sameer.order_service.entity.OrderStatus;
 import com.sameer.order_service.exception.OrderNotFoundException;
 import com.sameer.order_service.kafka.OrderProducer;
+import com.sameer.order_service.mapper.OrderMapper;
 import com.sameer.order_service.repository.OrderRepository;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderProducer orderProducer;
+    private final OrderMapper orderMapper;
 
     public OrderService(OrderRepository orderRepository,
-                        OrderProducer orderProducer) {
+                        OrderProducer orderProducer,
+                        OrderMapper orderMapper) {
 
         this.orderRepository = orderRepository;
         this.orderProducer = orderProducer;
+        this.orderMapper = orderMapper;
     }
 
-    // CREATE ORDER
-    public Order createOrder(Order order) {
+    public OrderResponse createOrder(CreateOrderRequest request) {
 
+        Order order = orderMapper.toEntity(request);
         order.setStatus(OrderStatus.CREATED);
-        order.setCreatedAt(LocalDateTime.now());
 
         Order savedOrder = orderRepository.save(order);
 
@@ -41,29 +47,23 @@ public class OrderService {
 
         orderProducer.sendOrderEvent(event);
 
-        return savedOrder;
+        return orderMapper.toResponse(savedOrder);
     }
 
-    // GET ORDER
-    public Order getOrderById(Long id) {
-
-        return orderRepository.findById(id)
-                .orElseThrow(() ->
-                        new OrderNotFoundException(
-                                "Order not found with ID: " + id));
+    @Transactional(readOnly = true)
+    public OrderResponse getOrderById(Long id) {
+        Order order = getOrderEntityById(id);
+        return orderMapper.toResponse(order);
     }
 
-    // UPDATE ORDER
-    public Order updateOrder(Long id, Order updatedOrder) {
+    public OrderResponse updateOrder(Long id, UpdateOrderRequest request) {
 
-        Order existingOrder = getOrderById(id);
+        Order existingOrder = getOrderEntityById(id);
 
-        existingOrder.setProductName(updatedOrder.getProductName());
-        existingOrder.setQuantity(updatedOrder.getQuantity());
-        existingOrder.setPrice(updatedOrder.getPrice());
+        orderMapper.updateEntityFromRequest(request, existingOrder);
 
-        if (updatedOrder.getStatus() != null) {
-            existingOrder.setStatus(updatedOrder.getStatus());
+        if (request.getStatus() != null) {
+            existingOrder.setStatus(OrderStatus.valueOf(request.getStatus()));
         }
 
         Order savedOrder = orderRepository.save(existingOrder);
@@ -78,13 +78,12 @@ public class OrderService {
 
         orderProducer.sendOrderEvent(event);
 
-        return savedOrder;
+        return orderMapper.toResponse(savedOrder);
     }
 
-    // DELETE ORDER
     public void deleteOrder(Long id) {
 
-        Order order = getOrderById(id);
+        Order order = getOrderEntityById(id);
 
         orderRepository.delete(order);
 
@@ -98,4 +97,11 @@ public class OrderService {
 
         orderProducer.sendOrderEvent(event);
     }
-}
+
+    private Order getOrderEntityById(Long id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() ->
+                        new OrderNotFoundException(
+                                "Order not found with ID: " + id));
+    }
+}

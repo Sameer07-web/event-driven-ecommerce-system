@@ -1,9 +1,13 @@
 package com.sameer.order_service.service;
 
+import com.sameer.order_service.dto.CreateOrderRequest;
 import com.sameer.order_service.dto.OrderEvent;
+import com.sameer.order_service.dto.OrderResponse;
+import com.sameer.order_service.dto.UpdateOrderRequest;
 import com.sameer.order_service.entity.Order;
 import com.sameer.order_service.entity.OrderStatus;
 import com.sameer.order_service.kafka.OrderProducer;
+import com.sameer.order_service.mapper.OrderMapper;
 import com.sameer.order_service.repository.OrderRepository;
 
 import org.junit.jupiter.api.Test;
@@ -27,11 +31,18 @@ class OrderServiceTest {
     @Mock
     private OrderProducer orderProducer;
 
+    @Mock
+    private OrderMapper orderMapper;
+
     @InjectMocks
     private OrderService orderService;
 
     @Test
     void createOrder_ShouldSaveOrderAndSendKafkaEvent() {
+        CreateOrderRequest request = new CreateOrderRequest();
+        request.setProductName("iPhone 16");
+        request.setQuantity(2);
+        request.setPrice(85000.0);
 
         Order order = Order.builder()
                 .productName("iPhone 16")
@@ -40,24 +51,24 @@ class OrderServiceTest {
                 .status(OrderStatus.CREATED)
                 .build();
 
-        when(orderRepository.save(any(Order.class)))
-                .thenReturn(order);
+        OrderResponse response = new OrderResponse();
+        response.setProductName("iPhone 16");
 
-        Order savedOrder = orderService.createOrder(order);
+        when(orderMapper.toEntity(any(CreateOrderRequest.class))).thenReturn(order);
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+        when(orderMapper.toResponse(any(Order.class))).thenReturn(response);
+
+        OrderResponse savedOrder = orderService.createOrder(request);
 
         assertNotNull(savedOrder);
         assertEquals("iPhone 16", savedOrder.getProductName());
 
-        verify(orderRepository, times(1))
-                .save(any(Order.class));
-
-        verify(orderProducer, times(1))
-                .sendOrderEvent(any(OrderEvent.class));
+        verify(orderRepository, times(1)).save(any(Order.class));
+        verify(orderProducer, times(1)).sendOrderEvent(any(OrderEvent.class));
     }
 
     @Test
-    void getOrderById_ShouldReturnOrder() {
-
+    void getOrderById_ShouldReturnOrderResponse() {
         Order order = Order.builder()
                 .id(1L)
                 .productName("Laptop")
@@ -66,10 +77,13 @@ class OrderServiceTest {
                 .status(OrderStatus.CREATED)
                 .build();
 
-        when(orderRepository.findById(1L))
-                .thenReturn(Optional.of(order));
+        OrderResponse response = new OrderResponse();
+        response.setProductName("Laptop");
 
-        Order result = orderService.getOrderById(1L);
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderMapper.toResponse(any(Order.class))).thenReturn(response);
+
+        OrderResponse result = orderService.getOrderById(1L);
 
         assertNotNull(result);
         assertEquals("Laptop", result.getProductName());
@@ -77,7 +91,6 @@ class OrderServiceTest {
 
     @Test
     void deleteOrder_ShouldDeleteOrderAndSendKafkaEvent() {
-
         Order order = Order.builder()
                 .id(1L)
                 .productName("Phone")
@@ -86,15 +99,11 @@ class OrderServiceTest {
                 .status(OrderStatus.CREATED)
                 .build();
 
-        when(orderRepository.findById(1L))
-                .thenReturn(Optional.of(order));
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 
         orderService.deleteOrder(1L);
 
-        verify(orderRepository, times(1))
-                .delete(order);
-
-        verify(orderProducer, times(1))
-                .sendOrderEvent(any(OrderEvent.class));
+        verify(orderRepository, times(1)).delete(order);
+        verify(orderProducer, times(1)).sendOrderEvent(any(OrderEvent.class));
     }
-}
+}
