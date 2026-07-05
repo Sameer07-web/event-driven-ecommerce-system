@@ -7,10 +7,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.3.5</version>
-		<relativePath/>
+		<groupId>com.sameer</groupId>
+		<artifactId>ecommerce-platform</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
 	<groupId>com.sameer</groupId>
@@ -25,6 +24,13 @@
 	</properties>
 
 	<dependencies>
+
+		<!-- Common Module -->
+		<dependency>
+			<groupId>com.sameer</groupId>
+			<artifactId>common-module</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
 
 		<!-- Spring Boot Web -->
 		<dependency>
