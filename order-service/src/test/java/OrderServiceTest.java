@@ -9,6 +9,7 @@ import com.sameer.order_service.entity.OrderStatus;
 import com.sameer.order_service.kafka.OrderProducer;
 import com.sameer.order_service.mapper.OrderMapper;
 import com.sameer.order_service.repository.OrderRepository;
+import com.sameer.order_service.service.impl.OrderServiceImpl;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,7 +36,7 @@ class OrderServiceTest {
     private OrderMapper orderMapper;
 
     @InjectMocks
-    private OrderService orderService;
+    private OrderServiceImpl orderService;
 
     @Test
     void createOrder_ShouldSaveOrderAndSendKafkaEvent() {
