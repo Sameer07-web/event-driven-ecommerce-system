@@ -1,31 +1,27 @@
 package com.sameer.common.filter;
 
-import jakarta.servlet.Filter;
+import com.sameer.common.constant.HeaderNames;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.MDC;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.UUID;
 
 @Component
 @Order(1)
-public class CorrelationIdFilter implements Filter {
-
-    private static final String CORRELATION_ID_HEADER = "X-Correlation-ID";
+public class CorrelationIdFilter extends OncePerRequestFilter {
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
 
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        String correlationId = httpRequest.getHeader(CORRELATION_ID_HEADER);
+        String correlationId = request.getHeader(HeaderNames.CORRELATION_ID);
 
         if (correlationId == null || correlationId.isEmpty()) {
             correlationId = UUID.randomUUID().toString();
@@ -35,10 +31,8 @@ public class CorrelationIdFilter implements Filter {
         MDC.put("correlationId", correlationId);
 
         try {
-            if (response instanceof HttpServletResponse httpServletResponse) {
-                httpServletResponse.setHeader(CORRELATION_ID_HEADER, correlationId);
-            }
-            chain.doFilter(request, response);
+            response.setHeader(HeaderNames.CORRELATION_ID, correlationId);
+            filterChain.doFilter(request, response);
         } finally {
             CorrelationIdContext.clear();
             MDC.remove("correlationId");

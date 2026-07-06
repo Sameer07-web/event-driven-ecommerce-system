@@ -1,12 +1,13 @@
 package com.sameer.order_service.service;
 
 import com.sameer.order_service.dto.CreateOrderRequest;
-import com.sameer.order_service.dto.OrderEvent;
 import com.sameer.order_service.dto.OrderResponse;
-import com.sameer.order_service.dto.UpdateOrderRequest;
 import com.sameer.order_service.entity.Order;
 import com.sameer.order_service.entity.OrderStatus;
-import com.sameer.order_service.kafka.OrderProducer;
+import com.sameer.order_service.event.mapper.OrderEventMapper;
+import com.sameer.order_service.event.model.OrderCancelledEvent;
+import com.sameer.order_service.event.model.OrderCreatedEvent;
+import com.sameer.order_service.event.publisher.OrderEventPublisher;
 import com.sameer.order_service.mapper.OrderMapper;
 import com.sameer.order_service.repository.OrderRepository;
 import com.sameer.order_service.service.impl.OrderServiceImpl;
@@ -30,7 +31,10 @@ class OrderServiceTest {
     private OrderRepository orderRepository;
 
     @Mock
-    private OrderProducer orderProducer;
+    private OrderEventPublisher orderEventPublisher;
+
+    @Mock
+    private OrderEventMapper orderEventMapper;
 
     @Mock
     private OrderMapper orderMapper;
@@ -54,10 +58,13 @@ class OrderServiceTest {
 
         OrderResponse response = new OrderResponse();
         response.setProductName("iPhone 16");
+        
+        OrderCreatedEvent event = new OrderCreatedEvent(1L, "iPhone 16", 2, 85000.0, "CREATED");
 
         when(orderMapper.toEntity(any(CreateOrderRequest.class))).thenReturn(order);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
         when(orderMapper.toResponse(any(Order.class))).thenReturn(response);
+        when(orderEventMapper.toCreatedEvent(any(Order.class))).thenReturn(event);
 
         OrderResponse savedOrder = orderService.createOrder(request);
 
@@ -65,7 +72,7 @@ class OrderServiceTest {
         assertEquals("iPhone 16", savedOrder.getProductName());
 
         verify(orderRepository, times(1)).save(any(Order.class));
-        verify(orderProducer, times(1)).sendOrderEvent(any(OrderEvent.class));
+        verify(orderEventPublisher, times(1)).publishOrderCreatedEvent(any(OrderCreatedEvent.class));
     }
 
     @Test
@@ -99,12 +106,17 @@ class OrderServiceTest {
                 .price(20000.0)
                 .status(OrderStatus.CREATED)
                 .build();
+                
+        OrderCancelledEvent event = new OrderCancelledEvent(1L, "Phone", 1, 20000.0, "CANCELLED");
 
         when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+        when(orderEventMapper.toCancelledEvent(any(Order.class))).thenReturn(event);
 
         orderService.deleteOrder(1L);
 
-        verify(orderRepository, times(1)).delete(order);
-        verify(orderProducer, times(1)).sendOrderEvent(any(OrderEvent.class));
+        verify(orderRepository, times(1)).save(order);
+        verify(orderEventPublisher, times(1)).publishOrderCancelledEvent(any(OrderCancelledEvent.class));
     }
-}
+}
+

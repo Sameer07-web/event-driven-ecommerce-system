@@ -1,6 +1,8 @@
 package com.sameer.order_service.exception;
 
-public class OrderNotFoundException extends RuntimeException {
+import com.sameer.common.exception.ResourceNotFoundException;
+
+public class OrderNotFoundException extends ResourceNotFoundException {
 
     public OrderNotFoundException(String message) {
         super(message);

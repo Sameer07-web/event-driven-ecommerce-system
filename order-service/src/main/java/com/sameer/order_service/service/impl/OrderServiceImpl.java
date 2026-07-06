@@ -1,13 +1,13 @@
 package com.sameer.order_service.service.impl;
 
 import com.sameer.order_service.dto.CreateOrderRequest;
-import com.sameer.order_service.dto.OrderEvent;
 import com.sameer.order_service.dto.OrderResponse;
 import com.sameer.order_service.dto.UpdateOrderRequest;
 import com.sameer.order_service.entity.Order;
 import com.sameer.order_service.entity.OrderStatus;
+import com.sameer.order_service.event.mapper.OrderEventMapper;
+import com.sameer.order_service.event.publisher.OrderEventPublisher;
 import com.sameer.order_service.exception.OrderNotFoundException;
-import com.sameer.order_service.kafka.OrderProducer;
 import com.sameer.order_service.mapper.OrderMapper;
 import com.sameer.order_service.repository.OrderRepository;
 import com.sameer.order_service.service.OrderService;
@@ -19,18 +19,22 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
-    private final OrderProducer orderProducer;
+    private final OrderEventPublisher orderEventPublisher;
+    private final OrderEventMapper orderEventMapper;
     private final OrderMapper orderMapper;
 
     public OrderServiceImpl(OrderRepository orderRepository,
-                            OrderProducer orderProducer,
+                            OrderEventPublisher orderEventPublisher,
+                            OrderEventMapper orderEventMapper,
                             OrderMapper orderMapper) {
 
         this.orderRepository = orderRepository;
-        this.orderProducer = orderProducer;
+        this.orderEventPublisher = orderEventPublisher;
+        this.orderEventMapper = orderEventMapper;
         this.orderMapper = orderMapper;
     }
 
+    @Override
     public OrderResponse createOrder(CreateOrderRequest request) {
 
         Order order = orderMapper.toEntity(request);
@@ -38,25 +42,21 @@ public class OrderServiceImpl implements OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
-        OrderEvent event = new OrderEvent(
-                savedOrder.getId(),
-                savedOrder.getProductName(),
-                savedOrder.getQuantity(),
-                savedOrder.getPrice(),
-                savedOrder.getStatus().name()
+        orderEventPublisher.publishOrderCreatedEvent(
+                orderEventMapper.toCreatedEvent(savedOrder)
         );
-
-        orderProducer.sendOrderEvent(event);
 
         return orderMapper.toResponse(savedOrder);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public OrderResponse getOrderById(Long id) {
         Order order = getOrderEntityById(id);
         return orderMapper.toResponse(order);
     }
 
+    @Override
     public OrderResponse updateOrder(Long id, UpdateOrderRequest request) {
 
         Order existingOrder = getOrderEntityById(id);
@@ -69,34 +69,24 @@ public class OrderServiceImpl implements OrderService {
 
         Order savedOrder = orderRepository.save(existingOrder);
 
-        OrderEvent event = new OrderEvent(
-                savedOrder.getId(),
-                savedOrder.getProductName(),
-                savedOrder.getQuantity(),
-                savedOrder.getPrice(),
-                savedOrder.getStatus().name()
+        orderEventPublisher.publishOrderUpdatedEvent(
+                orderEventMapper.toUpdatedEvent(savedOrder)
         );
-
-        orderProducer.sendOrderEvent(event);
 
         return orderMapper.toResponse(savedOrder);
     }
 
+    @Override
     public void deleteOrder(Long id) {
 
         Order order = getOrderEntityById(id);
+        
+        order.setStatus(OrderStatus.CANCELLED);
+        Order savedOrder = orderRepository.save(order);
 
-        orderRepository.delete(order);
-
-        OrderEvent event = new OrderEvent(
-                order.getId(),
-                order.getProductName(),
-                order.getQuantity(),
-                order.getPrice(),
-                "DELETED"
+        orderEventPublisher.publishOrderCancelledEvent(
+                orderEventMapper.toCancelledEvent(savedOrder)
         );
-
-        orderProducer.sendOrderEvent(event);
     }
 
     private Order getOrderEntityById(Long id) {
@@ -105,4 +95,5 @@ public class OrderServiceImpl implements OrderService {
                         new OrderNotFoundException(
                                 "Order not found with ID: " + id));
     }
-}
+}
+
