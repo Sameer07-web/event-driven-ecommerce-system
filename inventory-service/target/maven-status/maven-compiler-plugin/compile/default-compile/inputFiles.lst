@@ -1,0 +1,16 @@
+D:\GitHubProjects\event-driven-ecommerce-system\inventory-service\src\main\java\com\sameer\inventory_service\controller\InventoryController.java
+D:\GitHubProjects\event-driven-ecommerce-system\inventory-service\src\main\java\com\sameer\inventory_service\dto\CreateInventoryRequest.java
+D:\GitHubProjects\event-driven-ecommerce-system\inventory-service\src\main\java\com\sameer\inventory_service\dto\InventoryResponse.java
+D:\GitHubProjects\event-driven-ecommerce-system\inventory-service\src\main\java\com\sameer\inventory_service\dto\InventorySummaryResponse.java
+D:\GitHubProjects\event-driven-ecommerce-system\inventory-service\src\main\java\com\sameer\inventory_service\dto\UpdateInventoryRequest.java
+D:\GitHubProjects\event-driven-ecommerce-system\inventory-service\src\main\java\com\sameer\inventory_service\entity\Inventory.java
+D:\GitHubProjects\event-driven-ecommerce-system\inventory-service\src\main\java\com\sameer\inventory_service\enums\InventoryStatus.java
+D:\GitHubProjects\event-driven-ecommerce-system\inventory-service\src\main\java\com\sameer\inventory_service\exception\DuplicateInventoryException.java
+D:\GitHubProjects\event-driven-ecommerce-system\inventory-service\src\main\java\com\sameer\inventory_service\exception\GlobalExceptionHandler.java
+D:\GitHubProjects\event-driven-ecommerce-system\inventory-service\src\main\java\com\sameer\inventory_service\exception\InvalidInventoryStateException.java
+D:\GitHubProjects\event-driven-ecommerce-system\inventory-service\src\main\java\com\sameer\inventory_service\exception\InventoryNotFoundException.java
+D:\GitHubProjects\event-driven-ecommerce-system\inventory-service\src\main\java\com\sameer\inventory_service\InventoryServiceApplication.java
+D:\GitHubProjects\event-driven-ecommerce-system\inventory-service\src\main\java\com\sameer\inventory_service\mapper\InventoryMapper.java
+D:\GitHubProjects\event-driven-ecommerce-system\inventory-service\src\main\java\com\sameer\inventory_service\repository\InventoryRepository.java
+D:\GitHubProjects\event-driven-ecommerce-system\inventory-service\src\main\java\com\sameer\inventory_service\service\impl\InventoryServiceImpl.java
+D:\GitHubProjects\event-driven-ecommerce-system\inventory-service\src\main\java\com\sameer\inventory_service\service\InventoryService.java
